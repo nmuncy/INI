@@ -26,8 +26,15 @@
 
 
 ### For testing
-# workDir <- "/Volumes/Yorick/Nate_work/Kelsey/"
+# workDir <- "~/Desktop/Kelsey/"
 # data_raw <- read.delim(paste0(workDir,"002_Timing_files.txt"))
+# h.string <- as.character("002_Timing_files.txt")
+
+# workDir <- "~/Desktop/"
+# data_raw <- read.delim(paste0(workDir,"003_CR_Run2-003-1.txt"))
+# h.string <- as.character("003_CR_Run2-003-1.txt")
+
+# args <- "003_CR_Run2-003-1.txt"
 
 
 
@@ -43,12 +50,17 @@ args <- commandArgs(TRUE)
 data_raw <- read.delim(args[1])
 h.string <- as.character(args[1])
 
-## For Testing
-# data_raw <- read.delim("002_Timing_files.txt")
-# h.string <- as.character("002_Timing_files.txt")
+
+### Patchy patch for file oddities
+if(dim(data_raw)[2] == 1){
+  # data_raw <- read.delim(paste0(workDir,"003_CR_Run2-003-1.txt"), sep = " ")
+  data_raw <- read.delim(args[1], sep = " ")
+  data <- cbind(rep("hold",dim(data_raw)[1]),data_raw)
+}else{
+  data <- data_raw[!apply(is.na(data_raw) | data_raw == "", 1, all),]
+}
 
 subj <- gsub("_.*","",h.string)
-data <- data_raw[!apply(is.na(data_raw) | data_raw == "", 1, all),]
 row.names(data) <- 1:dim(data)[1]
 
 
@@ -105,8 +117,13 @@ h.YN <- as.character(data[ind.YN,3])
 
 # determine start/end time
 h.Start <- h.SOT.s[1]
-hold.end <- grep("Goodbye.OnsetTime:",data[,1])
-h.End <- as.numeric(as.character(data[hold.end,2]))
+if(data[dim(data)[1],1]=="hold"){
+  hold.end <- grep("Goodbye.OnsetTime:",data[,2])
+  h.End <- as.numeric(as.character(data[hold.end,3]))
+}else{
+  hold.end <- grep("Goodbye.OnsetTime:",data[,1])
+  h.End <- as.numeric(as.character(data[hold.end,2]))
+}
 
 
 
