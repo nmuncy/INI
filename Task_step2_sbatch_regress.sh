@@ -55,8 +55,13 @@ txtFile=1														# whether timing files are in txt format (1) or 1D (0)
 txtTime=1														# if txt file has block duration (1:3) for pmBLOCK (1=on)
 runDecons=1														# toggle for running reml scripts and post hoc (1=on) or just writing scripts (0)
 
-deconNum=(4)													# See Note 4 above
-deconPref=(FOT_NI FOT_NN FOT_YI FOT_YN)										# array of prefix for each planned decon (length must equal sum of $deconNum)
+# deconNum=(4)													# See Note 4 above
+# deconPref=(FOT_NI FOT_NN FOT_YI FOT_YN)										# array of prefix for each planned decon (length must equal sum of $deconNum)
+
+
+### nate edits
+deconNum=(1)
+deconPref=(YNIN)
 
 
 ## For 1D timing files
@@ -65,16 +70,25 @@ deconPref=(FOT_NI FOT_NN FOT_YI FOT_YN)										# array of prefix for each plan
 
 
 # For txt timing files
-txtNI=(${subj}_TF_FOT_NI.txt ${subj} ${subj}_TF_FOT_YI.txt ${subj})_TF_FOT_YN.txt
-txtNN=(${subj}_TF_FOT_NN.txt)
-txtYI=(${subj}_TF_FOT_YI.txt)
-txtYN=(${subj}_TF_FOT_YN.txt)
+# txtNI=(${subj}_TF_FOT_NI.txt ${subj} ${subj}_TF_FOT_YI.txt ${subj})_TF_FOT_YN.txt
+# txtNN=(${subj}_TF_FOT_NN.txt)
+# txtYI=(${subj}_TF_FOT_YI.txt)
+# txtYN=(${subj}_TF_FOT_YN.txt)
+
+
+### nate edits
+txtYNIN=(${subj}_TF_FOT_{YI,YN,NI,NN}.txt)
+
 
 # Label beh sub-bricks, per decon
-namNI=(FOT_NI)									# "Foo" of namFoo matches a $deconPref value, one string per timing file (e.g. deconPref=(SpT1); namSpT1=(Hit CR Miss FA))
-namNN=(FOT_NN)
-namYI=(FOT_YI)
-namYN=(FOT_YN)
+# namNI=(FOT_NI)									# "Foo" of namFoo matches a $deconPref value, one string per timing file (e.g. deconPref=(SpT1); namSpT1=(Hit CR Miss FA))
+# namNN=(FOT_NN)
+# namYI=(FOT_YI)
+# namYN=(FOT_YN)
+
+
+### nate edits
+namYNIN=(YI YN NI NN)
 
 
 
