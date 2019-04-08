@@ -23,10 +23,10 @@ module load r/3/5
 
 
 ###??? update these
-parDir=~/compute/STT_reml
+parDir=~/compute/SleepBrain_BIDS
 workDir=${parDir}/derivatives
 grpDir=${parDir}/Analyses/grpAnalysis
-refDir=${workDir}/sub-1295
+refDir=${workDir}/sub-003
 maxP=0.1								# max percentage of censored TRs allowed (0.1 = 10%)
 
 mkdir -p $grpDir

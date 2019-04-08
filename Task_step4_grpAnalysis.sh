@@ -1,4 +1,4 @@
-#!/bin/bash
+ls#!/bin/bash
 
 #SBATCH --time=40:00:00   # walltime
 #SBATCH --ntasks=10   # number of processor cores (i.e. tasks)
@@ -84,12 +84,12 @@ export OMP_NUM_THREADS=$SLURM_CPUS_ON_NODE
 
 
 # General variables
-parDir=~/compute/STT_reml
+parDir=~/compute/SleepBrain_BIDS
 workDir=${parDir}/derivatives								# par dir of data
 outDir=${parDir}/Analyses/grpAnalysis						# where output will be written (should match step3)
-refFile=${workDir}/sub-1295/run-1_STUDY_scale+tlrc			# reference file, for finding dimensions etc
+refFile=${workDir}/sub-003/run-1_Chatroom2_scale+tlrc		# reference file, for finding dimensions etc
 
-tempDir=~/bin/Templates/vold2_mni							# desired template
+tempDir=~/compute/Template/vold2_mni							# desired template
 priorDir=${tempDir}/priors_ACT								# location of atropos priors
 mask=Intersection_GM_mask+tlrc								# this will be made, just specify name for the interesection gray matter mask
 
@@ -101,8 +101,10 @@ runIt=1														# whether ETAC/MVM scripts actually run (and not just writt
 
 thr=0.3														# thresh value for Group_EPI_mask, ref Group_EPI_mean
 
-compList=(SpT1 SpT1pT2 T1 T1pT2 T2 T2fT1)					# matches decon prefixes, and will be prefix of output files
+compList=(FOT_NI FOT_NN FOT_YI FOT_YN)					    # matches decon prefixes, and will be prefix of output files
 compLen=${#compList[@]}
+
+### Not sure what to do with the rest of this -KZ
 
 arrA=(1 7 1 7 1 1)											# setA beh sub-brik for compList. Must be same length as compList
 arrB=(4 10 4 10 4 7)										# setB
