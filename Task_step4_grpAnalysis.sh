@@ -88,6 +88,7 @@ parDir=~/compute/SleepBrain_BIDS
 workDir=${parDir}/derivatives								# par dir of data
 outDir=${parDir}/Analyses/grpAnalysis						# where output will be written (should match step3)
 refFile=${workDir}/sub-003/run-1_Chatroom2_scale+tlrc		# reference file, for finding dimensions etc
+codeDir=${parDir}/code
 
 tempDir=~/compute/Template/vold2_mni							# desired template
 priorDir=${tempDir}/priors_ACT								# location of atropos priors
@@ -95,47 +96,38 @@ mask=Intersection_GM_mask+tlrc								# this will be made, just specify name for
 
 
 # grpAnalysis
-doETAC=1													# Toggle ETAC analysis (1)
-doMVM=0														# MVM (1)
+doETAC=0													# Toggle ETAC analysis (1)
+doMVM=1														# MVM (1)
 runIt=1														# whether ETAC/MVM scripts actually run (and not just written) (1)
 
 thr=0.3														# thresh value for Group_EPI_mask, ref Group_EPI_mean
 
-compList=(FOT_NI FOT_NN FOT_YI FOT_YN)					    # matches decon prefixes, and will be prefix of output files
+compList=(YNIN)					   							# matches decon prefixes, and will be prefix of output files
 compLen=${#compList[@]}
 
 ### Not sure what to do with the rest of this -KZ
 
-arrA=(1 7 1 7 1 1)											# setA beh sub-brik for compList. Must be same length as compList
-arrB=(4 10 4 10 4 7)										# setB
-#arrC=(39 59 65)
-listX=AB													# list of arr? used, for building permutations (e.g. listX=ABC)
+arrA=(1)													# setA beh sub-brik for compList. Must be same length as compList
+arrB=(3)													# setB
+arrC=(5)
+arrD=(7)
+listX=ABCD													# list of arr? used, for building permutations (e.g. listX=ABC)
 
-namA=(RpH RpFH Hit FpH Hit HpH)								# names of behaviors from arrA. Must be same length as arrA
-namB=(RpF RpFF FA  FpF FA  FpH)
-#namC=(RpCR CR MpH)
+namA=(YI)													# names of behaviors from arrA. Must be same length as arrA
+namB=(YN)
+namC=(NI)
+namD=(NN)
 
 
-# ETAC arrs
-blurX=({2..4})    											# blur multipliers (integer)
-pval_list=(0.01 0.005 0.001)								# p-value thresholds
+## ETAC arrs
+#blurX=({2..4})    											# blur multipliers (integer)
+#pval_list=(0.01 0.005 0.001)								# p-value thresholds
 
 
 # MVM vars/arrs
 blurM=2														# blur multiplier, float/int
-bsArr=(OCD Con)												# Bx-subject variables (groups)
-
-cd $workDir
-for i in s*; do
-	tmp=${i/sub-}; group=${tmp%??}
-	if [ $group == 1 ]; then
-		echo -e "$i \t Con" >> ${outDir}/Group_list.txt;
-	elif [ $group == 3 ]; then
-		echo -e "$i \t OCD" >> ${outDir}/Group_list.txt;
-	fi
-done
-
-bsList=${outDir}/Group_list.txt								# Needed when bsArr > 1. List where col1 = subj identifier, col2 = group membership (e.g. s1295 Con)
+bsArr=(Sleep NoSleep)										# Bx-subject variables (groups)
+bsList=${codeDir}/Final_Sleep_List.txt						# Needed when bsArr > 1. List where col1 = subj identifier, col2 = group membership (e.g. s1295 Con)
 
 
 
