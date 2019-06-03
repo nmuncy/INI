@@ -136,6 +136,9 @@ namD=(NN)
 blurX=({2..4})    											# blur multipliers (integer)
 pval_list=(0.01 0.005 0.001)								# p-value thresholds
 
+pairB=5
+pairN=NI
+
 
 # MVM vars/arrs
 blurM=2														# blur multiplier, float/int
@@ -214,7 +217,7 @@ if [ ! ${afniVer:7} -ge 18315 ]; then
 	exit 4
 fi
 
-# make permutation lists
+# make permutations, lists
 arr=(`MakePerm $listX`)
 alpha=(`echo {A..Z}`)
 wsList=(${alpha[@]:0:${#listX}})
@@ -224,6 +227,10 @@ for ((a=0; a<${#bsArr[@]}; a++)); do
 	tmpList+=$a
 done
 arrBS=(`MakePerm $tmpList`)
+
+
+bsSubj=(`cat $bsList | awk '{print $1}'`)
+bsGroup=(`cat $bsList | awk '{print $2}'`)
 
 
 
@@ -353,48 +360,80 @@ if [ $doETAC == 1 ]; then
 
 		for a in ${arr[@]}; do
 
-			# unpack sub-brik value/name for e/permutation set
-			eval declare -a var1=(arr${a:0:1})
-			eval declare -a var2=(arr${a:1:1})
-			eval declare -a nam1=(nam${a:0:1})
-			eval declare -a nam2=(nam${a:1:1})
-
-			brik1=$(eval echo \${${var1}[$c]})
-			brik2=$(eval echo \${${var2}[$c]})
-			name1=$(eval echo \${${nam1}[$c]})
-			name2=$(eval echo \${${nam2}[$c]})
-
-			out=${outPre}_${name1}-${name2}
-
-
 			# construct setA and setB of subjects not found in info_rmSubj.txt
 			arrRem=(`cat ${outDir}/info_rmSubj_${pref}.txt`)
 			unset ListA
 			unset ListB
 
-		    for i in ${workDir}/s*; do
+			if [ ${#bsArr[@]} == 2 ]; then
 
-				subj=${i##*\/}
-				MatchString "$subj" "${arrRem[@]}"
+				out=${outPre}_${pairN}_${bsArr[0]}-${bsArr[1]}
 
-				if [ $? == 1 ]; then
-					ListA+="$subj ${i}/${scan}[${brik1}] "
-					ListB+="$subj ${i}/${scan}[${brik2}] "
-				fi
-			done
+				for x in ${!arrBS[@]}; do
+
+					h1=${arrBS[$x]:0:1}
+					h2=${arrBS[$x]:1:1}
+
+					for i in ${workDir}/s*; do
+
+						subj=${i##*\/}
+						MatchString "$subj" "${arrRem[@]}"
+
+						if [ $? == 1 ]; then
+
+							for y in ${!bsSubj[@]}; do
+								if [ $subj == ${bsSubj[$y]} ]; then
+									if [ ${bsGroup[$y]} == ${bsArr[0]} ];then
+										ListA+="$subj ${i}/${scan}[${pairB}] "
+									else
+										ListB+="$subj ${i}/${scan}[${pairB}] "
+									fi
+								fi
+							done
+						fi
+					done
+				done
+
+			elif [ ${#bsArr[@]} -lt 2 ]; then
+
+				# unpack sub-brik value/name for e/permutation set
+				eval declare -a var1=(arr${a:0:1})
+				eval declare -a var2=(arr${a:1:1})
+				eval declare -a nam1=(nam${a:0:1})
+				eval declare -a nam2=(nam${a:1:1})
+
+				brik1=$(eval echo \${${var1}[$c]})
+				brik2=$(eval echo \${${var2}[$c]})
+				name1=$(eval echo \${${nam1}[$c]})
+				name2=$(eval echo \${${nam2}[$c]})
+
+				out=${outPre}_${name1}-${name2}
 
 
-			# write script
-			echo "3dttest++ \\
-				-paired \\
-				-mask $mask \\
-				-prefix $out \\
-				-prefix_clustsim ${out}_clustsim \\
-				-ETAC \\
-				-ETAC_blur $blur \\
-				-ETAC_opt name=NN1:NN1:2sid:pthr=$pval_all \\
-				-setA A $ListA \\
-				-setB B $ListB" > ${outDir}/${out}.sh
+			    for i in ${workDir}/s*; do
+
+					subj=${i##*\/}
+					MatchString "$subj" "${arrRem[@]}"
+
+					if [ $? == 1 ]; then
+						ListA+="$subj ${i}/${scan}[${brik1}] "
+						ListB+="$subj ${i}/${scan}[${brik2}] "
+					fi
+				done
+
+
+				# write script
+				echo "3dttest++ \\
+					-paired \\
+					-mask $mask \\
+					-prefix $out \\
+					-prefix_clustsim ${out}_clustsim \\
+					-ETAC \\
+					-ETAC_blur $blur \\
+					-ETAC_opt name=NN1:NN1:2sid:pthr=$pval_all \\
+					-setA A $ListA \\
+					-setB B $ListB" > ${outDir}/${out}.sh
+			fi
 
 
 			# Do ETAC
@@ -590,9 +629,6 @@ if [ $doMVM == 1 ]; then
 
 
 			# determine group membership, write dataframe
-			bsSubj=(`cat $bsList | awk '{print $1}'`)
-			bsGroup=(`cat $bsList | awk '{print $2}'`)
-
 			scan=${pref}_stats_REML_blur${blurInt}+tlrc
 
 			for m in ${subjList[@]}; do
