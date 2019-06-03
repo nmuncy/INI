@@ -90,13 +90,26 @@ outDir=${parDir}/Analyses/grpAnalysis						# where output will be written (shoul
 refFile=${workDir}/sub-003/run-1_Chatroom2_scale+tlrc		# reference file, for finding dimensions etc
 codeDir=${parDir}/code
 
-tempDir=~/compute/Template/vold2_mni							# desired template
+tempDir=~/compute/Template/vold2_mni						# desired template
 priorDir=${tempDir}/priors_ACT								# location of atropos priors
 mask=Intersection_GM_mask+tlrc								# this will be made, just specify name for the interesection gray matter mask
 
 
+## info for small volume correction 
+#
+# DLPFC = SFG
+# VLPFC = aMFG
+# LMPFC = LACC, LcACC, LSFG
+
+smallVol=1
+jlfDir=${tempDir}/priors_JLF
+roiNum=(1028 2028 1027 2027 1026 1002 1007 2007 0018 0054 0011 0012 0050 0051)
+roiLab=(LSFG RSFG LAMFG RAMFG LACC LcACC LFFG RFFG LAmg RAmg LCN LPut RCN RPut)
+maskSM=SmallVol_mask+tlrc
+
+
 # grpAnalysis
-doETAC=0													# Toggle ETAC analysis (1)
+doETAC=1													# Toggle ETAC analysis (1)
 doMVM=1														# MVM (1)
 runIt=1														# whether ETAC/MVM scripts actually run (and not just written) (1)
 
@@ -119,9 +132,9 @@ namC=(NI)
 namD=(NN)
 
 
-## ETAC arrs
-#blurX=({2..4})    											# blur multipliers (integer)
-#pval_list=(0.01 0.005 0.001)								# p-value thresholds
+# ETAC arrs
+blurX=({2..4})    											# blur multipliers (integer)
+pval_list=(0.01 0.005 0.001)								# p-value thresholds
 
 
 # MVM vars/arrs
@@ -240,8 +253,8 @@ if [ $runIt == 1 ]; then
 	fi
 
 
-	# make $mask
-	if [ ! -f ${mask}.HEAD ]; then
+	# make GM, $mask, $maskSM
+	if [ ! -f ${maskSM}+tlrc.HEAD ]; then
 
 		# GM mask
 		c3d ${priorDir}/Prior2.nii.gz ${priorDir}/Prior4.nii.gz -add -o tmp_Prior_GM.nii.gz
@@ -251,12 +264,31 @@ if [ $runIt == 1 ]; then
 		c3d tmp_Template_GM_mask.nii.gz Group_epi_mask.nii.gz -multiply -o tmp_Intersection_GM_prob_mask.nii.gz
 		c3d tmp_Intersection_GM_prob_mask.nii.gz -thresh 0.1 1 1 0 -o tmp_Intersection_GM_mask.nii.gz
 		3dcopy tmp_Intersection_GM_mask.nii.gz $mask
+
+		# combine jlf masks
+		if [ $smallVol == 1 ]; then
+
+			unset jlfList
+			c=0; while [ $c -lt ${#roiLab[@]} ]; do
+				c3d ${jlfDir}/label_${roiNum[$c]}.nii.gz -thresh 0.3 1 1 0 -o tmp_${roiLab[$c]}.nii.gz
+				jlfList+="tmp_${roiLab[$c]}.nii.gz "
+			done
+			c3d $jlfList -accum -add -endaccum -o tmp_SmallVol_mask.nii.gz
+
+			# resample, multiply by intersection, binarize
+			3dresample -master $refFile -rmode NN -input tmp_SmallVol_mask.nii.gz -prefix tmp_SmallVol_res.nii.gz
+			c3d tmp_SmallVol_res.nii.gz tmp_Intersection_GM_mask.nii.gz -multiply -o tmp_SmallVol_mul.nii.gz
+			c3d tmp_SmallVol_mul.nii.gz -thresh 0.1 1 1 0 -o tmp_SmallVol_bin.nii.gz
+			3dcopy tmp_SmallVol_bin.nii.gz $maskSM
+		fi
+
 		rm tmp*
 	fi
 
-	if [ ! -f ${mask}.HEAD ]; then
+
+	if [ ! -f ${maskSM}.HEAD ]; then
 		echo >&2
-		echo "Could not construct $mask. Exit 5" >&2
+		echo "Could not construct $maskSM. Exit 5" >&2
 		echo >&2
 		exit 5
 	fi
@@ -453,6 +485,13 @@ if [ $doMVM == 1 ]; then
 	fi
 
 
+	if [ $smallVol == 1 ]; then
+		maskUsed=$maskSM
+	else
+		maskUsed=$mask
+	fi
+
+
 	arrCount=0; while [ $arrCount -lt $compLen ]; do
 
 		pref=${compList[$arrCount]}
@@ -494,7 +533,7 @@ if [ $doMVM == 1 ]; then
 					done
 
 					# parameter estimate
-					3dFWHMx -mask $mask -input $file -acf >> $print
+					3dFWHMx -mask $maskUsed -input $file -acf >> $print
 				done
 			fi
 
@@ -508,7 +547,7 @@ if [ $doMVM == 1 ]; then
 				xB=`awk '{ total += $2 } END { print total/NR }' tmp`
 				xC=`awk '{ total += $3 } END { print total/NR }' tmp`
 
-				3dClustSim -mask $mask -LOTS -iter 10000 -acf $xA $xB $xC > ACF_MC_${pref}.txt
+				3dClustSim -mask $maskUsed -LOTS -iter 10000 -acf $xA $xB $xC > ACF_MC_${pref}.txt
 				rm tmp
 			fi
 		fi
@@ -605,7 +644,7 @@ if [ $doMVM == 1 ]; then
 
 			3dMVM -prefix $outPre \\
 			-jobs 10 \\
-			-mask $mask \\
+			-mask $maskUsed \\
 			-bsVars $bsVars \\
 			-wsVars 'WSVARS' \\
 			-num_glt $gltCount \\
