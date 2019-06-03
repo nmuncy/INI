@@ -394,6 +394,17 @@ if [ $doETAC == 1 ]; then
 					done
 				done
 
+				# write script
+				echo "3dttest++ \\
+					-mask $mask \\
+					-prefix $out \\
+					-prefix_clustsim ${out}_clustsim \\
+					-ETAC \\
+					-ETAC_blur $blur \\
+					-ETAC_opt name=NN1:NN1:2sid:pthr=$pval_all \\
+					-setA A $ListA \\
+					-setB B $ListB" > ${outDir}/${out}.sh
+
 			elif [ ${#bsArr[@]} -lt 2 ]; then
 
 				# unpack sub-brik value/name for e/permutation set
