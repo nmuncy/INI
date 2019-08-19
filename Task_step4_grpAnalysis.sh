@@ -279,6 +279,7 @@ if [ $runIt == 1 ]; then
 			c=0; while [ $c -lt ${#roiLab[@]} ]; do
 				c3d ${jlfDir}/label_${roiNum[$c]}.nii.gz -thresh 0.3 1 1 0 -o tmp_${roiLab[$c]}.nii.gz
 				jlfList+="tmp_${roiLab[$c]}.nii.gz "
+				let c=$[$c+1]
 			done
 			c3d $jlfList -accum -add -endaccum -o tmp_SmallVol_mask.nii.gz
 
