@@ -38,18 +38,21 @@ export OMP_NUM_THREADS=$SLURM_CPUS_ON_NODE
 
 
 # Variables
-parDir=~/compute/SleepBrain_BIDS
+parDir=~/compute/SleepandBrain_BIDS
 workDir=${parDir}/derivatives										###??? Update this section
 grpDir=${parDir}/Analyses/grpAnalysis
-clustDir=${grpDir}/etac_clusters
+clustDir=${grpDir}/etac_clusters	##this file doesn't exist...how do I need to change this to fit MVM? --KZ
 outDir=${grpDir}/etac_betas
+refDir=${workDir}/sub-002											# reference file for dimensions etc
 
 
-fileArr=(GxYN)							# decon files from which betas will be extracted - should match step4.
-arrA=(3)													# sub-bricks corresponding to $fileArr
-#arrB=(4 10 4 10 4 7)
+
+##Please take a look over this part...I tried my best! 
+fileArr=(3dFWHMx) 												# decon files from which betas will be extracted - should match step4.
+arrA=(4)															# sub-bricks corresponding to $fileArr
 arrLen=${#arrA[@]}
 
+blurX=({2..4})														# blur mulitpliers from previous steps
 
 
 
