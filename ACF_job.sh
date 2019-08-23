@@ -22,8 +22,10 @@ export OMP_NUM_THREADS=$SLURM_CPUS_ON_NODE
 # Set up nate fashion
 workDir=~/compute/SleepBrain_BIDS
 grpDir=${workDir}/Analyses/grpAnalysis
+
 printRaw=${grpDir}/ACF_wholeBrain_raw.txt
 printFinal=${grpDir}/ACF_wholeBrain_MC.txt
+mask=${grpDir}/Intersection_GM_mask+tlrc
 
 > $printRaw
 
@@ -32,7 +34,7 @@ printFinal=${grpDir}/ACF_wholeBrain_MC.txt
 # get noise estimates from e/person
 cd ${workDir}/derivatives
 for i in s*; do
-	3dFWHMx -mask ${grpDir}/Intersection_GM_mask+tlrc -input ${i}/YNIN_stats_REML_blur6+tlrc -acf >> $printRaw
+	3dFWHMx -mask $mask -input ${i}/YNIN_stats_REML_blur6+tlrc -acf >> $printRaw
 done
 
 
@@ -44,7 +46,7 @@ xA=`awk '{ total += $1 } END { print total/NR }' tmp`
 xB=`awk '{ total += $2 } END { print total/NR }' tmp`
 xC=`awk '{ total += $3 } END { print total/NR }' tmp`
 
-3dClustSim -mask Intersection_GM_mask+tlrc -LOTS -iter 10000 -acf $xA $xB $xC > $printFinal
+3dClustSim -mask $mask -LOTS -iter 10000 -acf $xA $xB $xC > $printFinal
 rm tmp
 
 
