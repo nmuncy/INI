@@ -4,7 +4,7 @@
 
 
 
-workDir=~/compute/STT_reml					###??? update this
+workDir=~/compute/SleepandBrain_BIDS					###??? update this
 slurmDir=${workDir}/derivatives/Slurm_out
 time=`date '+%Y_%m_%d-%H_%M_%S'`
 outDir=${slurmDir}/TS5_${time}
