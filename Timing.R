@@ -209,10 +209,10 @@ for(h in c("a","b")){
 
 for(i in 1:length(h.SOT.s)){
 
-  SOT.Start.s <- round(((h.SOT.s[i]-h.Start)/1000),1)
-  BOT.Start.s <- round(((h.BOT.s[i]-h.Start)/1000),1)
-  FOT.Start.s <- round(((h.FOT.s[i]-h.Start)/1000),1)
-  GOT.Start.s <- round(((h.GOT.s[i]-h.Start)/1000),1)
+  SOT.Start.s <- round(((h.SOT.s[i]-h.Start)/1000),1)+8
+  BOT.Start.s <- round(((h.BOT.s[i]-h.Start)/1000),1)+8
+  FOT.Start.s <- round(((h.FOT.s[i]-h.Start)/1000),1)+8
+  GOT.Start.s <- round(((h.GOT.s[i]-h.Start)/1000),1)+8
   
   TF1.dur.s <- round((FOT.Start.s-SOT.Start.s),1)
   TF2.dur.s <- round((FOT.Start.s-BOT.Start.s),1)
