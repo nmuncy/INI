@@ -23,10 +23,10 @@ module load r/3/5
 
 
 ###??? update these
-parDir=~/compute/STT_reml
+parDir=~/compute/SleepBrain_BIDS
 workDir=${parDir}/derivatives
 grpDir=${parDir}/Analyses/grpAnalysis
-refDir=${workDir}/sub-1295
+refDir=${workDir}/sub-003
 maxP=0.1								# max percentage of censored TRs allowed (0.1 = 10%)
 
 mkdir -p $grpDir
@@ -82,7 +82,7 @@ for i in ${deconList[@]}; do
 	arrLen=${#arrSubj[@]}
 
 	c=0; while [ $c -lt $arrLen ]; do
-		if [ $(echo ${arrNum[$c]}'>'$max) == 1 ] || [ $(echo ${arrPrp[$c]}'>'$maxP | bc) == 1 ]; then
+		if [ $(echo ${arrNum[$c]}'>'$max | bc) == 1 ] || [ $(echo ${arrPrp[$c]}'>'$maxP | bc) == 1 ]; then
 
 			echo ${arrSubj[$c]} >> $print2
 		fi

@@ -55,8 +55,9 @@ txtFile=1														# whether timing files are in txt format (1) or 1D (0)
 txtTime=1														# if txt file has block duration (1:3) for pmBLOCK (1=on)
 runDecons=1														# toggle for running reml scripts and post hoc (1=on) or just writing scripts (0)
 
-deconNum=(3)													# See Note 4 above
-deconPref=(StimBlk Blk Int)										# array of prefix for each planned decon (length must equal sum of $deconNum)
+deconNum=(1)													# See Note 4 above
+deconPref=(YNIN)												# array of prefix for each planned decon (length must equal sum of $deconNum)
+
 
 
 ## For 1D timing files
@@ -65,15 +66,13 @@ deconPref=(StimBlk Blk Int)										# array of prefix for each planned decon (l
 
 
 # For txt timing files
-txtStimBlk=(${subj}_TF_Stim_plus_Blk.txt ${subj}_TF_Fbk_all.txt ${subj}_TF_GFbk.txt)
-txtBlk=(${subj}_TF_{Stim,Blk,Fbk_all,GFbk}.txt)
-txtInt=(${subj}_TF_{Stim,Blk,Fbk_int,Fbk_not,GFbk}.txt)
+hold=${subj#*-}
+txtYNIN=(${hold}_TF_FOT_{YI,YN,NI,NN}.txt ${hold}_TF_Stim.txt ${hold}_TF_GFbk.txt)
 
 
 # Label beh sub-bricks, per decon
-namStimBlk=(StimBlk Fbk GFbk)									# "Foo" of namFoo matches a $deconPref value, one string per timing file (e.g. deconPref=(SpT1); namSpT1=(Hit CR Miss FA))
-namBlk=(Stim Blk Fbk GFbk)
-namInt=(Stim Blk FbkI FbkN GFbk)
+namYNIN=(YI YN NI NN Stim Gfbk)									# "Foo" of namFoo matches a $deconPref value, one string per timing file (e.g. deconPref=(SpT1); namSpT1=(Hit CR Miss FA))
+
 
 
 
