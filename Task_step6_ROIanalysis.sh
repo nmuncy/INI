@@ -82,9 +82,8 @@ if [ $jlfFlag == 1 ]; then
 		# make JLF mask
 		if [ ! -f ${ROI}.HEAD ]; then
 
-			jlfPrior=${jlfDir}/label_${roiList[$c]}.txt
-			3dcopy $jlfPrior tmp_${name}+tlrc
-		    3dfractionize -template $refFile -input tmp_${name}+tlrc -prefix tmp_res_${name}
+			c3d ${jlfDir}/label_${roiList[$c]}.txt -thresh 0.3 1 1 0 -o tmp_thresh_${name}.nii.gz
+		    3dfractionize -template $refFile -input tmp_thresh_${name}.nii.gz-prefix tmp_res_${name}
 		    3dcalc -a tmp_res_${name}+tlrc -prefix $ROI -expr "step(a)" && rm tmp*
 		fi
 
