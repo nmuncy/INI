@@ -1,10 +1,10 @@
-l#!/bin/bash
+#!/bin/bash
 
 
 
 
 
-workDir=~/compute/SleepBrain_BIDS
+workDir=~/compute/STT_reml
 slurmDir=${workDir}/derivatives/Slurm_out
 time=`date '+%Y_%m_%d-%H_%M_%S'`
 outDir=${slurmDir}/TS4_${time}

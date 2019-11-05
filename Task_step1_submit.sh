@@ -5,7 +5,7 @@
 # job submission output are time stamped for troubleshooting
 
 
-workDir=~/compute/SleepBrain_BIDS   ###??? update this
+workDir=~/compute/STT_reml   ###??? update this
 
 scriptDir=${workDir}/code
 slurmDir=${workDir}/derivatives/Slurm_out

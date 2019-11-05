@@ -39,17 +39,20 @@ subj=$1
 
 
 ###??? update these
-workDir=~/compute/SleepBrain_BIDS/derivatives/$subj
-dataDir=~/compute/SleepBrain_BIDS/rawdata/$subj
-tempDir=~/compute/Template/vold2_mni
+parDir=~/compute/STT_reml
+workDir=${parDir}/derivatives/$subj
+dataDir=${parDir}/rawdata/$subj
+
+tempDir=~/bin/Templates/vold2_mni
 template=${tempDir}/vold2_mni_brain+tlrc
 priorDir=${tempDir}/priors_ACT
 
 blip=0										# blip toggle (1=on)
-phaseArr=(Chatroom2)						# Each PHASE of experiment, in order (TEST1 precedes TEST2 but followed STUDY). This is absolutely necessary - so put something here
-blockArr=(1)   							    # number of blocks (runs) in each phase. E.g. STUDY had 1 block, TEST1 had 2 blocks. INTEGER!
+
+phaseArr=(STUDY TEST{1,2})					# Each PHASE of experiment, in order (TEST1 precedes TEST2 but followed STUDY). This is absolutely necessary - so put something here
+blockArr=(1 2 4)   							# number of blocks (runs) in each phase. E.g. STUDY had 1 block, TEST1 had 2 blocks. INTEGER!
 phaseLen=${#phaseArr[@]}
-doREML=1									# toggle for REML preparation (1=on)
+
 
 
 

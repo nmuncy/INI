@@ -4,7 +4,7 @@
 
 
 ###??? update these
-workDir=~/compute/SleepBrain_BIDS
+workDir=~/compute/STT_reml
 scriptDir=${workDir}/code
 slurmDir=${workDir}/derivatives/Slurm_out
 time=`date '+%Y_%m_%d-%H_%M_%S'`
@@ -15,7 +15,7 @@ mkdir -p $outDir
 cd ${workDir}/derivatives
 for i in sub*; do
 
-	[ $i == sub-003 ]; test=$?
+	[ $i == sub-1295 ]; test=$?
 
     sbatch \
     -o ${outDir}/output_TS2_${i}.txt \

@@ -84,66 +84,56 @@ export OMP_NUM_THREADS=$SLURM_CPUS_ON_NODE
 
 
 # General variables
-parDir=~/compute/SleepBrain_BIDS
+parDir=~/compute/STT_reml
 workDir=${parDir}/derivatives								# par dir of data
 outDir=${parDir}/Analyses/grpAnalysis						# where output will be written (should match step3)
-refFile=${workDir}/sub-003/run-1_Chatroom2_scale+tlrc		# reference file, for finding dimensions etc
-codeDir=${parDir}/code
+refFile=${workDir}/sub-1295/run-1_STUDY_scale+tlrc			# reference file, for finding dimensions etc
 
-tempDir=~/compute/Template/vold2_mni						# desired template
+tempDir=~/bin/Templates/vold2_mni							# desired template
 priorDir=${tempDir}/priors_ACT								# location of atropos priors
 mask=Intersection_GM_mask+tlrc								# this will be made, just specify name for the interesection gray matter mask
 
 
-## info for small volume correction 
-#
-# DLPFC = SFG
-# VLPFC = aMFG
-# LMPFC = LACC, LcACC, LSFG
-
-smallVol=1
-jlfDir=${tempDir}/priors_JLF
-roiNum=(1028 2028 1027 2027 1026 1002 1007 2007 0018 0054 0011 0012 0050 0051)
-roiLab=(LSFG RSFG LAMFG RAMFG LACC LcACC LFFG RFFG LAmg RAmg LCN LPut RCN RPut)
-maskSM=SmallVol_mask+tlrc
-
-
 # grpAnalysis
 doETAC=1													# Toggle ETAC analysis (1)
-doMVM=1														# MVM (1)
+doMVM=0														# MVM (1)
 runIt=1														# whether ETAC/MVM scripts actually run (and not just written) (1)
 
 thr=0.3														# thresh value for Group_EPI_mask, ref Group_EPI_mean
 
-compList=(YNIN)					   							# matches decon prefixes, and will be prefix of output files
+compList=(SpT1 SpT1pT2 T1 T1pT2 T2 T2fT1)					# matches decon prefixes, and will be prefix of output files
 compLen=${#compList[@]}
 
-### Not sure what to do with the rest of this -KZ
+arrA=(1 7 1 7 1 1)											# setA beh sub-brik for compList. Must be same length as compList
+arrB=(4 10 4 10 4 7)										# setB
+#arrC=(39 59 65)
+listX=AB													# list of arr? used, for building permutations (e.g. listX=ABC)
 
-arrA=(1)													# setA beh sub-brik for compList. Must be same length as compList
-arrB=(3)													# setB
-arrC=(5)
-arrD=(7)
-listX=ABCD													# list of arr? used, for building permutations (e.g. listX=ABC)
-
-namA=(YI)													# names of behaviors from arrA. Must be same length as arrA
-namB=(YN)
-namC=(NI)
-namD=(NN)
+namA=(RpH RpFH Hit FpH Hit HpH)								# names of behaviors from arrA. Must be same length as arrA
+namB=(RpF RpFF FA  FpF FA  FpH)
+#namC=(RpCR CR MpH)
 
 
 # ETAC arrs
 blurX=({2..4})    											# blur multipliers (integer)
 pval_list=(0.01 0.005 0.001)								# p-value thresholds
 
-pairB=5
-pairN=NI
-
 
 # MVM vars/arrs
 blurM=2														# blur multiplier, float/int
-bsArr=(Sleep NoSleep)										# Bx-subject variables (groups)
-bsList=${codeDir}/Final_Sleep_List.txt						# Needed when bsArr > 1. List where col1 = subj identifier, col2 = group membership (e.g. s1295 Con)
+bsArr=(OCD Con)												# Bx-subject variables (groups)
+
+cd $workDir
+for i in s*; do
+	tmp=${i/sub-}; group=${tmp%??}
+	if [ $group == 1 ]; then
+		echo -e "$i \t Con" >> ${outDir}/Group_list.txt;
+	elif [ $group == 3 ]; then
+		echo -e "$i \t OCD" >> ${outDir}/Group_list.txt;
+	fi
+done
+
+bsList=${outDir}/Group_list.txt								# Needed when bsArr > 1. List where col1 = subj identifier, col2 = group membership (e.g. s1295 Con)
 
 
 
@@ -217,7 +207,7 @@ if [ ! ${afniVer:7} -ge 18315 ]; then
 	exit 4
 fi
 
-# make permutations, lists
+# make permutation lists
 arr=(`MakePerm $listX`)
 alpha=(`echo {A..Z}`)
 wsList=(${alpha[@]:0:${#listX}})
@@ -227,10 +217,6 @@ for ((a=0; a<${#bsArr[@]}; a++)); do
 	tmpList+=$a
 done
 arrBS=(`MakePerm $tmpList`)
-
-
-bsSubj=(`cat $bsList | awk '{print $1}'`)
-bsGroup=(`cat $bsList | awk '{print $2}'`)
 
 
 
@@ -260,8 +246,8 @@ if [ $runIt == 1 ]; then
 	fi
 
 
-	# make GM, $mask, $maskSM
-	if [ ! -f ${maskSM}+tlrc.HEAD ]; then
+	# make $mask
+	if [ ! -f ${mask}.HEAD ]; then
 
 		# GM mask
 		c3d ${priorDir}/Prior2.nii.gz ${priorDir}/Prior4.nii.gz -add -o tmp_Prior_GM.nii.gz
@@ -271,32 +257,12 @@ if [ $runIt == 1 ]; then
 		c3d tmp_Template_GM_mask.nii.gz Group_epi_mask.nii.gz -multiply -o tmp_Intersection_GM_prob_mask.nii.gz
 		c3d tmp_Intersection_GM_prob_mask.nii.gz -thresh 0.1 1 1 0 -o tmp_Intersection_GM_mask.nii.gz
 		3dcopy tmp_Intersection_GM_mask.nii.gz $mask
-
-		# combine jlf masks
-		if [ $smallVol == 1 ]; then
-
-			unset jlfList
-			c=0; while [ $c -lt ${#roiLab[@]} ]; do
-				c3d ${jlfDir}/label_${roiNum[$c]}.nii.gz -thresh 0.3 1 1 0 -o tmp_${roiLab[$c]}.nii.gz
-				jlfList+="tmp_${roiLab[$c]}.nii.gz "
-				let c=$[$c+1]
-			done
-			c3d $jlfList -accum -add -endaccum -o tmp_SmallVol_mask.nii.gz
-
-			# resample, multiply by intersection, binarize
-			3dresample -master $refFile -rmode NN -input tmp_SmallVol_mask.nii.gz -prefix tmp_SmallVol_res.nii.gz
-			c3d tmp_SmallVol_res.nii.gz tmp_Intersection_GM_mask.nii.gz -multiply -o tmp_SmallVol_mul.nii.gz
-			c3d tmp_SmallVol_mul.nii.gz -thresh 0.1 1 1 0 -o tmp_SmallVol_bin.nii.gz
-			3dcopy tmp_SmallVol_bin.nii.gz $maskSM
-		fi
-
 		rm tmp*
 	fi
 
-
-	if [ ! -f ${maskSM}.HEAD ]; then
+	if [ ! -f ${mask}.HEAD ]; then
 		echo >&2
-		echo "Could not construct $maskSM. Exit 5" >&2
+		echo "Could not construct $mask. Exit 5" >&2
 		echo >&2
 		exit 5
 	fi
@@ -361,91 +327,48 @@ if [ $doETAC == 1 ]; then
 
 		for a in ${arr[@]}; do
 
+			# unpack sub-brik value/name for e/permutation set
+			eval declare -a var1=(arr${a:0:1})
+			eval declare -a var2=(arr${a:1:1})
+			eval declare -a nam1=(nam${a:0:1})
+			eval declare -a nam2=(nam${a:1:1})
+
+			brik1=$(eval echo \${${var1}[$c]})
+			brik2=$(eval echo \${${var2}[$c]})
+			name1=$(eval echo \${${nam1}[$c]})
+			name2=$(eval echo \${${nam2}[$c]})
+
+			out=${outPre}_${name1}-${name2}
+
+
 			# construct setA and setB of subjects not found in info_rmSubj.txt
 			arrRem=(`cat ${outDir}/info_rmSubj_${pref}.txt`)
 			unset ListA
 			unset ListB
 
-			if [ ${#bsArr[@]} == 2 ]; then
+		    for i in ${workDir}/s*; do
 
-				out=${outPre}_${pairN}_${bsArr[0]}-${bsArr[1]}
+				subj=${i##*\/}
+				MatchString "$subj" "${arrRem[@]}"
 
-				for x in ${!arrBS[@]}; do
-
-					h1=${arrBS[$x]:0:1}
-					h2=${arrBS[$x]:1:1}
-
-					for i in ${workDir}/s*; do
-
-						subj=${i##*\/}
-						MatchString "$subj" "${arrRem[@]}"
-
-						if [ $? == 1 ]; then
-
-							for y in ${!bsSubj[@]}; do
-								if [ $subj == ${bsSubj[$y]} ]; then
-									if [ ${bsGroup[$y]} == ${bsArr[0]} ];then
-										ListA+="$subj ${i}/${scan}[${pairB}] "
-									else
-										ListB+="$subj ${i}/${scan}[${pairB}] "
-									fi
-								fi
-							done
-						fi
-					done
-				done
-
-				# write script
-				echo "3dttest++ \\
-					-mask $mask \\
-					-prefix $out \\
-					-prefix_clustsim ${out}_clustsim \\
-					-ETAC \\
-					-ETAC_blur $blur \\
-					-ETAC_opt name=NN1:NN1:2sid:pthr=$pval_all \\
-					-setA A $ListA \\
-					-setB B $ListB" > ${outDir}/${out}.sh
-
-			elif [ ${#bsArr[@]} -lt 2 ]; then
-
-				# unpack sub-brik value/name for e/permutation set
-				eval declare -a var1=(arr${a:0:1})
-				eval declare -a var2=(arr${a:1:1})
-				eval declare -a nam1=(nam${a:0:1})
-				eval declare -a nam2=(nam${a:1:1})
-
-				brik1=$(eval echo \${${var1}[$c]})
-				brik2=$(eval echo \${${var2}[$c]})
-				name1=$(eval echo \${${nam1}[$c]})
-				name2=$(eval echo \${${nam2}[$c]})
-
-				out=${outPre}_${name1}-${name2}
+				if [ $? == 1 ]; then
+					ListA+="$subj ${i}/${scan}[${brik1}] "
+					ListB+="$subj ${i}/${scan}[${brik2}] "
+				fi
+			done
 
 
-			    for i in ${workDir}/s*; do
-
-					subj=${i##*\/}
-					MatchString "$subj" "${arrRem[@]}"
-
-					if [ $? == 1 ]; then
-						ListA+="$subj ${i}/${scan}[${brik1}] "
-						ListB+="$subj ${i}/${scan}[${brik2}] "
-					fi
-				done
-
-
-				# write script
-				echo "3dttest++ \\
-					-paired \\
-					-mask $mask \\
-					-prefix $out \\
-					-prefix_clustsim ${out}_clustsim \\
-					-ETAC \\
-					-ETAC_blur $blur \\
-					-ETAC_opt name=NN1:NN1:2sid:pthr=$pval_all \\
-					-setA A $ListA \\
-					-setB B $ListB" > ${outDir}/${out}.sh
-			fi
+			# write script
+			echo "3dttest++ \\
+				-paired \\
+				-mask $mask \\
+				-prefix $out \\
+				-prefix_clustsim ${out}_clustsim \\
+				-ETAC \\
+				-ETAC_blur $blur \\
+				-ETAC_opt name=NN1:NN1:2sid:pthr=$pval_all \\
+				-setA A $ListA \\
+				-setB B $ListB" > ${outDir}/${out}.sh
 
 
 			# Do ETAC
@@ -536,13 +459,6 @@ if [ $doMVM == 1 ]; then
 	fi
 
 
-	if [ $smallVol == 1 ]; then
-		maskUsed=$maskSM
-	else
-		maskUsed=$mask
-	fi
-
-
 	arrCount=0; while [ $arrCount -lt $compLen ]; do
 
 		pref=${compList[$arrCount]}
@@ -584,7 +500,7 @@ if [ $doMVM == 1 ]; then
 					done
 
 					# parameter estimate
-					3dFWHMx -mask $maskUsed -input $file -acf >> $print
+					3dFWHMx -mask $mask -input $file -acf >> $print
 				done
 			fi
 
@@ -598,7 +514,7 @@ if [ $doMVM == 1 ]; then
 				xB=`awk '{ total += $2 } END { print total/NR }' tmp`
 				xC=`awk '{ total += $3 } END { print total/NR }' tmp`
 
-				3dClustSim -mask $maskUsed -LOTS -iter 10000 -acf $xA $xB $xC > ACF_MC_${pref}.txt
+				3dClustSim -mask $mask -LOTS -iter 10000 -acf $xA $xB $xC > ACF_MC_${pref}.txt
 				rm tmp
 			fi
 		fi
@@ -641,6 +557,9 @@ if [ $doMVM == 1 ]; then
 
 
 			# determine group membership, write dataframe
+			bsSubj=(`cat $bsList | awk '{print $1}'`)
+			bsGroup=(`cat $bsList | awk '{print $2}'`)
+
 			scan=${pref}_stats_REML_blur${blurInt}+tlrc
 
 			for m in ${subjList[@]}; do
@@ -692,7 +611,7 @@ if [ $doMVM == 1 ]; then
 
 			3dMVM -prefix $outPre \\
 			-jobs 10 \\
-			-mask $maskUsed \\
+			-mask $mask \\
 			-bsVars $bsVars \\
 			-wsVars 'WSVARS' \\
 			-num_glt $gltCount \\
